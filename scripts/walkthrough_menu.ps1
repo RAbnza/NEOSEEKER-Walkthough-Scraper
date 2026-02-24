@@ -5,7 +5,7 @@ param(
   [int]$DefaultMaxPages = 400,
   [double]$DefaultDelaySeconds = 1.0,
   [int]$DefaultCdpPort = 9222,
-  [string]$PythonExe = "C:/Users/Rendel Abainza/AppData/Local/Programs/Python/Python312/python.exe",
+  [string]$PythonExe = "",
   [switch]$Diagnostics
 )
 

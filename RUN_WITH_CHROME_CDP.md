@@ -17,19 +17,15 @@ This does not bypass anti-bot protections. It just uses an already-verified brow
 The menu script walks you through killing Chrome, starting CDP Chrome, testing CDP, and running the scraper.
 
 ```powershell
-Push-Location "e:/My Files/Personal Projects/walkthough-scraper"
 Set-ExecutionPolicy -Scope Process Bypass
 & .\scripts\walkthrough_menu.ps1
-Pop-Location
 ```
 
 Optional: pass defaults (handy for quick tests):
 
 ```powershell
-Push-Location "e:/My Files/Personal Projects/walkthough-scraper"
 Set-ExecutionPolicy -Scope Process Bypass
 & .\scripts\walkthrough_menu.ps1 -DefaultCdpPort 9222 -DefaultMaxPages 400
-Pop-Location
 ```
 
 ## Manual: step-by-step
@@ -75,15 +71,13 @@ Leave that Chrome window open.
 In a second PowerShell window:
 
 ```powershell
-Push-Location "e:/My Files/Personal Projects/walkthough-scraper"
-& "C:/Users/Rendel Abainza/AppData/Local/Programs/Python/Python312/python.exe" -m walkthrough_scraper `
+py -3.12 -m walkthrough_scraper `
   --cdp-url "http://127.0.0.1:9222" `
   --start "https://www.neoseeker.com/the-legend-of-heroes-trails-in-the-sky-the-1st/Prologue" `
   --output "output/trails-in-the-sky-1st.pdf" `
   --offline-assets `
   --max-pages 400 `
   --delay 1.0
-Pop-Location
 ```
 
 Notes:
@@ -130,7 +124,7 @@ Start Chrome:
 
 Run scraper:
 ```powershell
-& "C:/Users/Rendel Abainza/AppData/Local/Programs/Python/Python312/python.exe" -m walkthrough_scraper --cdp-url "http://127.0.0.1:9223" --start "..." --output "output/out.pdf"
+py -3.12 -m walkthrough_scraper --cdp-url "http://127.0.0.1:9223" --start "..." --output "output/out.pdf"
 ```
 
 ### Verification still loops even in real Chrome

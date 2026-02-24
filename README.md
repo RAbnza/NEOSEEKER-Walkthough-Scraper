@@ -12,21 +12,20 @@ Note: some sites may show a security verification page. This project does not by
 
 ## Install
 
-From PowerShell (run from the repo root):
+From PowerShell (run in the repo root):
 
 ```powershell
-Push-Location "e:/My Files/Personal Projects/walkthough-scraper"
-
-# Install Python deps
-& "C:/Users/Rendel Abainza/AppData/Local/Programs/Python/Python312/python.exe" -m pip install -r requirements.txt
-
-# Install Playwright browser
-& "C:/Users/Rendel Abainza/AppData/Local/Programs/Python/Python312/python.exe" -m playwright install chromium
-
-Pop-Location
+# Recommended on Windows (py launcher)
+py -3.12 -m pip install -r requirements.txt
+py -3.12 -m playwright install chromium
 ```
 
-If your Python is on PATH, you can replace the long Python path with `python`.
+If you don’t have the `py` launcher, try:
+
+```powershell
+python -m pip install -r requirements.txt
+python -m playwright install chromium
+```
 
 ## Run (recommended: menu interface)
 
@@ -38,19 +37,15 @@ This opens a small PowerShell menu to:
 - exit
 
 ```powershell
-Push-Location "e:/My Files/Personal Projects/walkthough-scraper"
 Set-ExecutionPolicy -Scope Process Bypass
 & .\scripts\walkthrough_menu.ps1
-Pop-Location
 ```
 
 Optional defaults:
 
 ```powershell
-Push-Location "e:/My Files/Personal Projects/walkthough-scraper"
 Set-ExecutionPolicy -Scope Process Bypass
 & .\scripts\walkthrough_menu.ps1 -DefaultCdpPort 9222 -DefaultMaxPages 400
-Pop-Location
 ```
 
 The detailed “attach to Chrome (CDP)” walkthrough is in [RUN_WITH_CHROME_CDP.md](RUN_WITH_CHROME_CDP.md).
@@ -60,9 +55,7 @@ The detailed “attach to Chrome (CDP)” walkthrough is in [RUN_WITH_CHROME_CDP
 Show options:
 
 ```powershell
-Push-Location "e:/My Files/Personal Projects/walkthough-scraper"
-& "C:/Users/Rendel Abainza/AppData/Local/Programs/Python/Python312/python.exe" -m walkthrough_scraper --help
-Pop-Location
+py -3.12 -m walkthrough_scraper --help
 ```
 
 Useful flags:
@@ -77,7 +70,6 @@ Useful flags:
 - If the menu exits immediately, run diagnostics:
 
 ```powershell
-Push-Location "e:/My Files/Personal Projects/walkthough-scraper"
-powershell -ExecutionPolicy Bypass -File "scripts/walkthrough_menu.ps1" -Diagnostics
-Pop-Location
+Set-ExecutionPolicy -Scope Process Bypass
+& .\scripts\walkthrough_menu.ps1 -Diagnostics
 ```

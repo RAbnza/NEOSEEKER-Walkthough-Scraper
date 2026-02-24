@@ -6,3 +6,6 @@ __pycache__/
 output/
 *.pdf
 *.html
+personalInstruction/
+personalInstructions/
+personal_instruction/
