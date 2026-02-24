@@ -1,62 +1,83 @@
-# walkthrough-scraper
+# NEOSEEKER: Walkthrough-Scraper
 
-Scrape a paged Neoseeker walkthrough and export it to a **single PDF** (so you don’t have to keep pressing “Next”).
+I made this app so I wouldn’t have to keep clicking “Next” every time I read a walkthrough on Neoseeker. It automatically crawls paged walkthroughs (Neoseeker-style “Next” pages) and exports everything into a single PDF, so you can read everything in one go. (Yes, I am that lazy lol)
 
-Important: Neoseeker may show a **security / anti-bot verification** page ("Just a moment..."). This project does **not** bypass that. Instead, you run it in **non-headless** mode, complete verification in the opened browser window, and the tool reuses the saved cookies via a persistent profile directory.
+Note: some sites may show a security verification page. This project does not bypass anti-bot protections. The best automated approach is to attach to your already-verified Chrome session.
 
 ## Requirements
 
-- Windows + Python 3.12+
+- Windows
+- Python 3.12+
 - Internet access
 
 ## Install
 
-From PowerShell:
+From PowerShell (run from the repo root):
 
 ```powershell
 Push-Location "e:/My Files/Personal Projects/walkthough-scraper"
+
+# Install Python deps
 & "C:/Users/Rendel Abainza/AppData/Local/Programs/Python/Python312/python.exe" -m pip install -r requirements.txt
+
+# Install Playwright browser
 & "C:/Users/Rendel Abainza/AppData/Local/Programs/Python/Python312/python.exe" -m playwright install chromium
+
 Pop-Location
 ```
 
-## Usage
+If your Python is on PATH, you can replace the long Python path with `python`.
 
-Example (your link):
+## Run (recommended: menu interface)
+
+This opens a small PowerShell menu to:
+- stop Chrome
+- start CDP Chrome
+- test CDP
+- run the scraper
+- exit
 
 ```powershell
 Push-Location "e:/My Files/Personal Projects/walkthough-scraper"
-& "C:/Users/Rendel Abainza/AppData/Local/Programs/Python/Python312/python.exe" -m walkthrough_scraper `
-  --start "https://www.neoseeker.com/the-legend-of-heroes-trails-in-the-sky-the-1st/Prologue" `
-  --output "output/trails-in-the-sky-1st.pdf" `
-  --max-pages 400 `
-  --delay 1.0
+Set-ExecutionPolicy -Scope Process Bypass
+& .\scripts\walkthrough_menu.ps1
 Pop-Location
 ```
 
-If the browser shows a verification page:
-
-1. Complete the verification in the Chromium window.
-2. Come back to the terminal and press Enter.
-
-The tool stores cookies in `.profile/` by default.
-
-### Troubleshooting
-
-- If you get stuck on a verification page in headless mode, **do not use `--headless`**.
-- If the PDF is missing content, try specifying the main content container:
+Optional defaults:
 
 ```powershell
-& "C:/Users/Rendel Abainza/AppData/Local/Programs/Python/Python312/python.exe" -m walkthrough_scraper --start "..." --output "output/out.pdf" --selector "main"
+Push-Location "e:/My Files/Personal Projects/walkthough-scraper"
+Set-ExecutionPolicy -Scope Process Bypass
+& .\scripts\walkthrough_menu.ps1 -DefaultCdpPort 9222 -DefaultMaxPages 400
+Pop-Location
 ```
 
-- To debug what’s being rendered, save the combined HTML:
+The detailed “attach to Chrome (CDP)” walkthrough is in [RUN_WITH_CHROME_CDP.md](RUN_WITH_CHROME_CDP.md).
+
+## Advanced (CLI)
+
+Show options:
 
 ```powershell
-& "C:/Users/Rendel Abainza/AppData/Local/Programs/Python/Python312/python.exe" -m walkthrough_scraper --start "..." --output "output/out.pdf" --save-html "output/combined.html"
+Push-Location "e:/My Files/Personal Projects/walkthough-scraper"
+& "C:/Users/Rendel Abainza/AppData/Local/Programs/Python/Python312/python.exe" -m walkthrough_scraper --help
+Pop-Location
 ```
 
-## Notes
+Useful flags:
+- `--offline-assets` downloads images so the PDF renders more reliably.
+- `--urls-file urls.txt` uses an explicit list of URLs (one per line) instead of clicking Next.
+- `--save-html output/combined.html` writes the combined HTML for debugging.
 
-- Be polite: keep a delay between pages.
-- Use this for personal offline reading. Respect Neoseeker’s terms and copyright.
+## Troubleshooting
+
+- If you get `PermissionError` writing the PDF, close the PDF viewer (Windows locks open PDFs).
+- If you see repeated verification pages, use the CDP method in [RUN_WITH_CHROME_CDP.md](RUN_WITH_CHROME_CDP.md).
+- If the menu exits immediately, run diagnostics:
+
+```powershell
+Push-Location "e:/My Files/Personal Projects/walkthough-scraper"
+powershell -ExecutionPolicy Bypass -File "scripts/walkthrough_menu.ps1" -Diagnostics
+Pop-Location
+```

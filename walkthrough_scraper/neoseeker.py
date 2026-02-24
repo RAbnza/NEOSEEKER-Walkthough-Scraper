@@ -148,23 +148,58 @@ def find_next_url(page: Page, *, allowed_prefix: str) -> str | None:
     next_url = page.evaluate(
         """
 (allowedPrefix) => {
-  const fromLinkTag = document.querySelector('link[rel="next"]');
-  if (fromLinkTag?.href) return fromLinkTag.href;
+  const current = location.href;
 
-  const fromRel = document.querySelector('a[rel="next"]');
-  if (fromRel?.href) return fromRel.href;
+  const linkTag = document.querySelector('link[rel="next"]');
+  if (linkTag?.href && linkTag.href.startsWith(allowedPrefix) && linkTag.href !== current) return linkTag.href;
 
-  const anchors = Array.from(document.querySelectorAll('a'));
-  const byText = anchors.find(a => (a.textContent || '').trim().toLowerCase() === 'next');
-  if (byText?.href) return byText.href;
+  const anchors = Array.from(document.querySelectorAll('a[href]'));
 
-  const byAria = anchors.find(a => ((a.getAttribute('aria-label') || '').trim().toLowerCase() === 'next'));
-  if (byAria?.href) return byAria.href;
+  const scoreAnchor = (a) => {
+    const href = a.href || '';
+    if (!href || !href.startsWith(allowedPrefix) || href === current) return -1e9;
 
-  // Some pagination uses symbols.
-  const bySymbol = anchors.find(a => ['›','»','>'].includes((a.textContent || '').trim()));
-  if (bySymbol?.href) return bySymbol.href;
+    const text = (a.textContent || '').trim().toLowerCase();
+    const aria = ((a.getAttribute('aria-label') || '')).trim().toLowerCase();
+    const rel = ((a.getAttribute('rel') || '')).toLowerCase();
+    const cls = ((a.getAttribute('class') || '')).toLowerCase();
+    const title = ((a.getAttribute('title') || '')).trim().toLowerCase();
 
+    let s = 0;
+    if (rel.includes('next')) s += 100;
+    if (aria === 'next' || aria.includes('next')) s += 80;
+    if (title === 'next' || title.includes('next')) s += 70;
+    if (text === 'next') s += 90;
+    if (text.includes('next')) s += 60;
+    if (['›','»','>','next »','› next'].includes(text)) s += 50;
+    if (cls.includes('next')) s += 40;
+
+    // Boost if it's inside a likely pagination container.
+    let p = a.parentElement;
+    for (let i = 0; i < 4 && p; i++) {
+      const pcls = ((p.getAttribute('class') || '')).toLowerCase();
+      const pid = ((p.getAttribute('id') || '')).toLowerCase();
+      if (pcls.includes('pagination') || pcls.includes('pager') || pcls.includes('nav') || pid.includes('pagination') || pid.includes('pager')) {
+        s += 25;
+        break;
+      }
+      p = p.parentElement;
+    }
+
+    return s;
+  };
+
+  let best = null;
+  let bestScore = -1e9;
+  for (const a of anchors) {
+    const s = scoreAnchor(a);
+    if (s > bestScore) {
+      bestScore = s;
+      best = a;
+    }
+  }
+
+  if (best && bestScore > 10) return best.href;
   return null;
 }
         """,

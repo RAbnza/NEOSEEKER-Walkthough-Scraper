@@ -1,14 +1,22 @@
 from __future__ import annotations
 
 from datetime import datetime
+import os
 from pathlib import Path
+import time
 
 from playwright.sync_api import BrowserContext
 
 from .model import ScrapedPage
 
 
-def build_combined_html(*, doc_title: str, pages: list[ScrapedPage], start_url: str) -> str:
+def build_combined_html(
+    *,
+    doc_title: str,
+    pages: list[ScrapedPage],
+    start_url: str,
+    base_href: str | None = "https://www.neoseeker.com/",
+) -> str:
     generated_at = datetime.now().strftime("%Y-%m-%d %H:%M")
 
     sections = []
@@ -46,7 +54,8 @@ a:hover { text-decoration: underline; }
 """
 
     # A <base> tag helps relative URLs inside captured HTML resolve.
-    base = "https://www.neoseeker.com/"
+    # For offline asset rewriting, pass base_href=None to avoid breaking local paths.
+    base_tag = f"<base href=\"{_escape_attr(base_href)}\">" if base_href else ""
 
     return "\n".join(
         [
@@ -54,7 +63,7 @@ a:hover { text-decoration: underline; }
             "<html>",
             "<head>",
             "<meta charset=\"utf-8\">",
-            f"<base href=\"{base}\">",
+            base_tag,
             f"<title>{_escape(doc_title)}</title>",
             f"<style>{css}</style>",
             "</head>",
@@ -70,20 +79,48 @@ a:hover { text-decoration: underline; }
     )
 
 
-def render_pdf(*, context: BrowserContext, html: str, output_pdf: str) -> None:
+def render_pdf(
+    *,
+    context: BrowserContext,
+    html: str,
+    output_pdf: str,
+    content_base_dir: str | None = None,
+) -> None:
     out_path = Path(output_pdf)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
+    tmp_path = out_path.with_suffix(out_path.suffix + ".tmp")
+
     page = context.new_page()
-    page.set_content(html, wait_until="networkidle")
+
+    if content_base_dir:
+        base_dir = Path(content_base_dir).resolve()
+        base_dir.mkdir(parents=True, exist_ok=True)
+        html_file = base_dir / "combined.html"
+        html_file.write_text(html, encoding="utf-8")
+        page.goto(html_file.as_uri(), wait_until="networkidle")
+    else:
+        page.set_content(html, wait_until="networkidle")
+
     page.emulate_media(media="print")
     page.pdf(
-        path=str(out_path),
+        path=str(tmp_path),
         format="Letter",
         print_background=True,
         margin={"top": "18mm", "bottom": "18mm", "left": "14mm", "right": "14mm"},
     )
     page.close()
+
+    # Atomically replace the final PDF. On Windows, the destination may be locked
+    # (e.g., open in a PDF viewer). Retry briefly, then keep the tmp file.
+    for attempt in range(1, 6):
+        try:
+            os.replace(tmp_path, out_path)
+            return
+        except PermissionError:
+            if attempt == 5:
+                raise
+            time.sleep(1.0)
 
 
 def _escape(s: str) -> str:
