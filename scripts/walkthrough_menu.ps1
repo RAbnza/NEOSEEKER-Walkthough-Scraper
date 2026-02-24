@@ -190,7 +190,7 @@ function Show-Menu {
 
   Write-Divider -Char "="
   Write-Host "WALKTHROUGH SCRAPER" -ForegroundColor Cyan
-  Write-Host "made by Rendel Abainza" -ForegroundColor DarkGray
+  Write-Host "made by RAbnza" -ForegroundColor DarkGray
   Write-Divider -Char "="
   Write-Host ""
 
